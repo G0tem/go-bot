@@ -14,6 +14,8 @@ import (
 // )
 
 func RunBot() {
+	// Logic bot
+	// Loading .env
 	err := godotenv.Load()
 
 	if err != nil {
