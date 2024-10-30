@@ -1,41 +1,50 @@
 package bot
 
 import (
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 )
 
-// const (
-// 	apiKey = "Ваш API ключ"
-// 	apiURL = "Адрес запроса на API биржи"
-// )
+var (
+	apiKey    string
+	apiSecret string
+	botToken  string
+)
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Ошибка при загрузке переменных окружения из файла .env")
+	}
+
+	apiKey = os.Getenv("API_KEY")
+	apiSecret = os.Getenv("API_SECRET")
+	botToken = os.Getenv("BOT_TOKEN")
+
+}
 
 var numericKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("1"),
-		tgbotapi.NewKeyboardButton("2"),
-		tgbotapi.NewKeyboardButton("3"),
+		tgbotapi.NewKeyboardButton("/help"),
+		tgbotapi.NewKeyboardButton("/sayhi"),
+		tgbotapi.NewKeyboardButton("/status"),
 	),
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("4"),
-		tgbotapi.NewKeyboardButton("5"),
+		tgbotapi.NewKeyboardButton("/ping"),
+		tgbotapi.NewKeyboardButton("/time"),
 		tgbotapi.NewKeyboardButton("6"),
 	),
 )
 
 func RunBot() {
 	// Logic bot
-	// Loading .env
-	err := godotenv.Load()
 
-	if err != nil {
-		log.Fatal("Ошибка при загрузке переменных окружения из файла .env")
-	}
-
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("BOT_TOKEN"))
+	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -88,45 +97,128 @@ func RunBot() {
 		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "help":
-			msg.Text = "I understand /sayhi and /status."
+			msg.Text = "I understand /sayhi and /status and /ping and /time commands"
 		case "sayhi":
 			msg.Text = "Hi :)"
 		case "status":
 			msg.Text = "I'm ok."
+		case "ping":
+			statusCode, responseBody := sendRequestToAPI("https://api.mexc.com/api/v3/ping")
+			msg.Text = responseBody
+			if statusCode != 200 {
+				msg.Text = "Error"
+			}
+		case "time":
+			statusCode, responseBody := sendRequestToAPI("https://api.mexc.com/api/v3/time")
+			msg.Text = responseBody
+			if statusCode != 200 {
+				msg.Text = "Error"
+			}
 		default:
 			msg.Text = "I don't know that command"
 		}
 
-		// // Okay, we're sending our message off! We don't care about the message
-		// // we just sent, so we'll discard it.
-		// if _, err := bot.Send(msg); err != nil {
-		// 	// Note that panics are a bad way to handle errors. Telegram can
-		// 	// have service outages or network errors, you should retry sending
-		// 	// messages or more gracefully handle failures.
-		// 	panic(err)
-		// }
+		// Okay, we're sending our message off! We don't care about the message
+		// we just sent, so we'll discard it.
+		if _, err := bot.Send(msg); err != nil {
+			// Note that panics are a bad way to handle errors. Telegram can
+			// have service outages or network errors, you should retry sending
+			// messages or more gracefully handle failures.
+			panic(err)
+		}
 	}
 }
 
-// func sendRequestToAPI(chatID int64) {
-// 	// Создаем запрос на API биржи
-// 	req, err := http.NewRequest("GET", apiURL, nil)
+func sendRequestToAPI(url string) (int, string) {
+	// Создаем запрос на API биржи
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Println(err)
+		return 0, ""
+	}
+
+	// Отправляем запрос на API биржи
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println(err)
+		return 0, ""
+	}
+
+	// Обрабатываем ответ от API биржи
+	defer resp.Body.Close()
+
+	// Читаем содержимое ответа
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return 0, ""
+	}
+
+	// Возвращаем код ответа и содержимое ответа
+	return resp.StatusCode, string(body)
+}
+
+// Inline Keyboard----------------------------------------------------------------------------------
+// var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
+// 	tgbotapi.NewInlineKeyboardRow(
+// 		tgbotapi.NewInlineKeyboardButtonURL("1.com", "http://1.com"),
+// 		tgbotapi.NewInlineKeyboardButtonData("2", "2"),
+// 		tgbotapi.NewInlineKeyboardButtonData("3", "3"),
+// 	),
+// 	tgbotapi.NewInlineKeyboardRow(
+// 		tgbotapi.NewInlineKeyboardButtonData("4", "4"),
+// 		tgbotapi.NewInlineKeyboardButtonData("5", "5"),
+// 		tgbotapi.NewInlineKeyboardButtonData("6", "6"),
+// 	),
+// )
+
+// func RunBot() {
+// 	bot, err := tgbotapi.NewBotAPI(botToken)
 // 	if err != nil {
-// 		log.Println(err)
-// 		return
+// 		log.Panic(err)
 // 	}
 
-// 	// Добавляем API ключ в запрос
-// 	req.Header.Set("Authorization", "Bearer "+apiKey)
+// 	bot.Debug = true
 
-// 	// Отправляем запрос на API биржи
-// 	resp, err := http.DefaultClient.Do(req)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return
+// 	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+// 	u := tgbotapi.NewUpdate(0)
+// 	u.Timeout = 60
+
+// 	updates := bot.GetUpdatesChan(u)
+
+// 	// Loop through each update.
+// 	for update := range updates {
+// 		// Check if we've gotten a message update.
+// 		if update.Message != nil {
+// 			// Construct a new message from the given chat ID and containing
+// 			// the text that we received.
+// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+
+// 			// If the message was open, add a copy of our numeric keyboard.
+// 			switch update.Message.Text {
+// 			case "open":
+// 				msg.ReplyMarkup = numericKeyboard
+
+// 			}
+
+// 			// Send the message.
+// 			if _, err = bot.Send(msg); err != nil {
+// 				panic(err)
+// 			}
+// 		} else if update.CallbackQuery != nil {
+// 			// Respond to the callback query, telling Telegram to show the user
+// 			// a message with the data received.
+// 			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
+// 			if _, err := bot.Request(callback); err != nil {
+// 				panic(err)
+// 			}
+
+// 			// And finally, send a message containing the data received.
+// 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
+// 			if _, err := bot.Send(msg); err != nil {
+// 				panic(err)
+// 			}
+// 		}
 // 	}
-
-// 	// Обрабатываем ответ от API биржи
-// 	defer resp.Body.Close()
-// 	// ...
 // }
