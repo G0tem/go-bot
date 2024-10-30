@@ -64,10 +64,15 @@ func RunBot() {
 			continue
 		}
 
+		// if !update.Message.IsCommand() { // ignore any non-command Messages
+		//     continue
+		// }
+
 		// Now that we know we've gotten a new message, we can construct a
 		// reply! We'll take the Chat ID and Text from the incoming message
 		// and use it to create a new message.
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+
 		// We'll also say that this message is a reply to the previous message.
 		// For any other specifications than Chat ID or Text, you'll need to
 		// set fields on the `MessageConfig`.
@@ -80,56 +85,28 @@ func RunBot() {
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 		}
 
-		if _, err := bot.Send(msg); err != nil {
-			log.Panic(err)
+		// Extract the command from the Message.
+		switch update.Message.Command() {
+		case "help":
+			msg.Text = "I understand /sayhi and /status."
+		case "sayhi":
+			msg.Text = "Hi :)"
+		case "status":
+			msg.Text = "I'm ok."
+		default:
+			msg.Text = "I don't know that command"
 		}
 
-		// Okay, we're sending our message off! We don't care about the message
-		// we just sent, so we'll discard it.
-		if _, err := bot.Send(msg); err != nil {
-			// Note that panics are a bad way to handle errors. Telegram can
-			// have service outages or network errors, you should retry sending
-			// messages or more gracefully handle failures.
-			panic(err)
-		}
+		// // Okay, we're sending our message off! We don't care about the message
+		// // we just sent, so we'll discard it.
+		// if _, err := bot.Send(msg); err != nil {
+		// 	// Note that panics are a bad way to handle errors. Telegram can
+		// 	// have service outages or network errors, you should retry sending
+		// 	// messages or more gracefully handle failures.
+		// 	panic(err)
+		// }
 	}
 }
-
-// Keyboard
-// func main() {
-// 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-
-// 	bot.Debug = true
-
-// 	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-// 	u := tgbotapi.NewUpdate(0)
-// 	u.Timeout = 60
-
-// 	updates := bot.GetUpdatesChan(u)
-
-// 	for update := range updates {
-// 		if update.Message == nil { // ignore non-Message updates
-// 			continue
-// 		}
-
-// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-
-// 		switch update.Message.Text {
-// 		case "open":
-// 			msg.ReplyMarkup = numericKeyboard
-// 		case "close":
-// 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-// 		}
-
-// 		if _, err := bot.Send(msg); err != nil {
-// 			log.Panic(err)
-// 		}
-// 	}
-// }
 
 // func sendRequestToAPI(chatID int64) {
 // 	// Создаем запрос на API биржи
