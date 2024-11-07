@@ -97,11 +97,11 @@ func RunBot() {
 		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "help":
-			msg.Text = "I understand /sayhi and /status and /ping and /time commands"
+			msg.Text = "Бот поддерживает команды: /sayhi , /status , /ping , /time "
 		case "sayhi":
-			msg.Text = "Hi :)"
+			msg.Text = "Добрый день, это бот для автоматической работы с биржей."
 		case "status":
-			msg.Text = "I'm ok."
+			msg.Text = "В работе."
 		case "ping":
 			statusCode, responseBody := sendRequestToAPI("https://api.mexc.com/api/v3/ping")
 			msg.Text = responseBody
@@ -114,6 +114,8 @@ func RunBot() {
 			if statusCode != 200 {
 				msg.Text = "Error"
 			}
+		case "6":
+			msg.Text = "заглушка"
 		default:
 			msg.Text = "I don't know that command"
 		}
