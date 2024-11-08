@@ -37,7 +37,7 @@ var numericKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
 		tgbotapi.NewKeyboardButton("/ping"),
 		tgbotapi.NewKeyboardButton("/time"),
-		tgbotapi.NewKeyboardButton("6"),
+		tgbotapi.NewKeyboardButton("/price"),
 	),
 )
 
@@ -114,7 +114,7 @@ func RunBot() {
 			if statusCode != 200 {
 				msg.Text = "Error"
 			}
-		case "6":
+		case "/price":
 			msg.Text = "заглушка"
 		default:
 			msg.Text = "I don't know that command"
