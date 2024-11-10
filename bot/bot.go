@@ -114,8 +114,12 @@ func RunBot() {
 			if statusCode != 200 {
 				msg.Text = "Error"
 			}
-		case "/price":
-			msg.Text = "заглушка"
+		case "price":
+			statusCode, responseBody := sendRequestToAPI("https://api.mexc.com/api/v3/avgPrice?symbol=KASUSDT")
+			msg.Text = responseBody
+			if statusCode != 200 {
+				msg.Text = "Error"
+			}
 		default:
 			msg.Text = "I don't know that command"
 		}
