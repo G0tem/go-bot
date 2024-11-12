@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
@@ -164,39 +165,39 @@ func sendRequestToAPI(url string) (int, string) {
 	return resp.StatusCode, string(body)
 }
 
-// func sendRequestToAPI(url string) {
-//     for {
-//         // Создаем запрос на API биржи
-//         req, err := http.NewRequest("GET", url, nil)
-//         if err != nil {
-//             log.Println(err)
-//             continue
-//         }
+func sendRequestToAPItoTime(url string) {
+	for {
+		// Создаем запрос на API биржи
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
-//         // Отправляем запрос на API биржи
-//         resp, err := http.DefaultClient.Do(req)
-//         if err != nil {
-//             log.Println(err)
-//             continue
-//         }
+		// Отправляем запрос на API биржи
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
-//         // Обрабатываем ответ от API биржи
-//         defer resp.Body.Close()
+		// Обрабатываем ответ от API биржи
+		defer resp.Body.Close()
 
-//         // Читаем содержимое ответа
-//         body, err := ioutil.ReadAll(resp.Body)
-//         if err != nil {
-//             log.Println(err)
-//             continue
-//         }
+		// Читаем содержимое ответа
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 
-//         // Возвращаем код ответа и содержимое ответа
-//         log.Println(resp.StatusCode, string(body))
+		// Возвращаем код ответа и содержимое ответа
+		log.Println(resp.StatusCode, string(body))
 
-//         // Приостанавливаем выполнение на 1 секунду
-//         time.Sleep(1 * time.Second)
-//     }
-// }
+		// Приостанавливаем выполнение на 1 секунду
+		time.Sleep(1 * time.Second)
+	}
+}
 
 // Inline Keyboard----------------------------------------------------------------------------------
 // var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
