@@ -115,7 +115,7 @@ func RunBot() {
 		case "sayhi":
 			msg.Text = "Добрый день, это бот для автоматической работы с биржей."
 		case "status":
-			msg.Text = "В работе."
+			msg.ReplyMarkup = keyboard
 		case "ping":
 			statusCode, responseBody := sendRequestToAPI("https://api.mexc.com/api/v3/ping")
 			msg.Text = responseBody
