@@ -65,40 +65,53 @@ func RunBot() {
 
 	bot.Debug = true
 
-	// Create a new UpdateConfig struct with an offset of 0. Offsets are used
-	// to make sure Telegram knows we've handled previous values and we don't
-	// need them repeated.
+	// Создаем новую структуру UpdateConfig со смещением 0. Смещения используются
+	// чтобы убедиться, что Telegram знает, что мы обработали предыдущие значения, и нам
+	// не нужно их повторять.
 	updateConfig := tgbotapi.NewUpdate(0)
 
-	// Tell Telegram we should wait up to 30 seconds on each request for an
-	// update. This way we can get information just as quickly as making many
-	// frequent requests without having to send nearly as many.
+	// Сообщите Telegram, что нам следует ждать до 30 секунд при каждом запросе на
+	// обновление. Таким образом, мы можем получать информацию так же быстро, как если бы делали много
+	// частых запросов, не отправляя почти столько же.
 	updateConfig.Timeout = 30
 
-	// Start polling Telegram for updates.
+	// Начните опрос Telegram на предмет обновлений
 	updates := bot.GetUpdatesChan(updateConfig)
 
-	// Let's go through each update that we're getting from Telegram.
+	// Давайте рассмотрим каждое обновление, которое мы получаем от Telegram.
 	for update := range updates {
-		// Telegram can send many types of updates depending on what your Bot
-		// is up to. We only want to look at messages for now, so we can
-		// discard any other updates.
+		// Telegram может отправлять множество типов обновлений в зависимости от того, что делает ваш бот
+		// Сейчас мы хотим просматривать только сообщения, поэтому можем
+		// отбросить любые другие обновления.
 		if update.Message == nil {
 			continue
+		} else if update.CallbackQuery != nil {
+			// Ответ на запрос обратного вызова, сообщающий Telegram о необходимости показать пользователю
+			// сообщение с полученными данными.
+			callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
+			if _, err := bot.Request(callback); err != nil {
+				panic(err)
+			}
+
+			// отправьте сообщение, содержащее полученные данные.
+			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Data)
+			if _, err := bot.Send(msg); err != nil {
+				panic(err)
+			}
 		}
 
-		// if !update.Message.IsCommand() { // ignore any non-command Messages
+		// if !update.Message.IsCommand() { // игнорировать любые некомандные сообщения
 		//     continue
 		// }
 
-		// Now that we know we've gotten a new message, we can construct a
-		// reply! We'll take the Chat ID and Text from the incoming message
-		// and use it to create a new message.
+		// Теперь, когда мы знаем, что получили новое сообщение, мы можем создать
+		// ответ! Мы возьмем идентификатор чата и текст из входящего сообщения
+		// и используем его для создания нового сообщения.
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 
-		// We'll also say that this message is a reply to the previous message.
-		// For any other specifications than Chat ID or Text, you'll need to
-		// set fields on the `MessageConfig`.
+		// Мы также скажем, что это сообщение является ответом на предыдущее сообщение.
+		// Для любых других спецификаций, кроме идентификатора чата или текста, вам необходимо
+		// задать поля в `MessageConfig`.
 		msg.ReplyToMessageID = update.Message.MessageID
 
 		switch update.Message.Text {
@@ -108,7 +121,7 @@ func RunBot() {
 			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
 		}
 
-		// Extract the command from the Message.
+		// Извлеките команду из сообщения.
 		switch update.Message.Command() {
 		case "help":
 			msg.Text = "Бот поддерживает команды: /sayhi , /status , /ping , /time "
@@ -138,12 +151,12 @@ func RunBot() {
 			msg.Text = "I don't know that command"
 		}
 
-		// Okay, we're sending our message off! We don't care about the message
-		// we just sent, so we'll discard it.
+		// Хорошо, мы отправляем наше сообщение! Нам не важно сообщение, которое
+		// мы только что отправили, поэтому мы его отбросим.
 		if _, err := bot.Send(msg); err != nil {
-			// Note that panics are a bad way to handle errors. Telegram can
-			// have service outages or network errors, you should retry sending
-			// messages or more gracefully handle failures.
+			// Обратите внимание, что паника — плохой способ обработки ошибок. У Telegram могут
+			// возникнуть сбои в работе сервиса или сетевые ошибки, вам следует повторить отправку
+			// сообщений или более изящно обработать сбои.
 			panic(err)
 		}
 	}
@@ -240,7 +253,7 @@ func sendRequestToAPItoTime(url string) {
 // 			// If the message was open, add a copy of our numeric keyboard.
 // 			switch update.Message.Text {
 // 			case "open":
-// 				msg.ReplyMarkup = numericKeyboard
+// 				msg.ReplyMarkup = keyboard
 
 // 			}
 
