@@ -56,7 +56,7 @@ var numericKeyboard = tgbotapi.NewReplyKeyboard(
 )
 
 func RunBot() {
-	// Logic bot
+	// Логика работы бота, для обработки запросов к API Биржи
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -100,10 +100,6 @@ func RunBot() {
 			}
 		}
 
-		// if !update.Message.IsCommand() { // игнорировать любые некомандные сообщения
-		//     continue
-		// }
-
 		// Теперь, когда мы знаем, что получили новое сообщение, мы можем создать
 		// ответ! Мы возьмем идентификатор чата и текст из входящего сообщения
 		// и используем его для создания нового сообщения.
@@ -114,14 +110,7 @@ func RunBot() {
 		// задать поля в `MessageConfig`.
 		msg.ReplyToMessageID = update.Message.MessageID
 
-		switch update.Message.Text {
-		case "open":
-			msg.ReplyMarkup = numericKeyboard
-		case "close":
-			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
-		}
-
-		// Извлеките команду из сообщения.
+		// Обработка команд
 		switch update.Message.Command() {
 		case "help":
 			msg.Text = "Бот поддерживает команды: /sayhi , /status , /ping , /time "
